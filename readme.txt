@@ -64,3 +64,21 @@ the page is named after the file (my-post.txt -> my-post.html) and dated today.
 after a successful push the .txt is moved to <watch folder>/built/.
 non-.txt files are logged as WARN and ignored; failures are logged as ERROR
 and the .txt is left in place to fix and re-save.
+
+in practice
+1. start the watcher once per boot, from this folder:
+     nohup ./bs.sh watch > /dev/null 2>&1 &
+2. write a post in the icloud writing/build-system folder, e.g. april-tenth.txt
+   (first line = title). saving it is publishing it: within a second or two
+   the page is built into amatthew-website/writing/prose/april-tenth.html,
+   committed as "add april-tenth.html", and pushed to github pages.
+3. the .txt disappears into writing/build-system/built/ - that means it worked.
+   if it's still sitting in the folder, something failed: check the log
+     tail logs.txt
+   fix the problem (e.g. blank first line) and save the file again to retry.
+4. to publish without the watcher running: ./bs.sh build path/to/file.txt
+5. to stop the watcher: pkill -f "bs.sh watch"; pkill fswatch
+6. to edit a published post: move its .txt out of built/ back into the folder,
+   edit, save - the page is rebuilt and re-pushed (same name overwrites).
+limitations: the new page is not linked from writing.html (add it by hand),
+and a failed push is not retried - push the website repo manually.
