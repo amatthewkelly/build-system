@@ -1,0 +1,7 @@
+the title goes on the first line
+Each following line becomes its own paragraph.
+Blank lines are ignored, so feel free to space things out.
+
+Save the file with a lowercase name and no spaces, e.g. my-new-post.txt.
+The page will be published as my-new-post.html, dated the day it is built.
+Text like <this> is shown literally, not treated as HTML.

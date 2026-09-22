@@ -43,3 +43,24 @@ general notes
 paragraphs demarcated by single line break in text file
 - placeholders in html template like {{TITLE}}, {{DATE}}, {{CONTENT}}) so python can find and replace 
 - bash and python log errors in same file
+
+---------------------------------------------------------------------
+how it works (v1)
+
+files
+- bs.sh        the pipeline: watch folder -> build page -> git push -> archive source
+- build.py     turns one .txt into an .html page using template.html
+- config.sh    paths (watch folder, website repo, page folder, log file)
+- template.html, prose.css   page template + test copy of the site css
+- example.txt  example input file showing the text format
+- logs.txt     everything bash and python log (not committed)
+
+usage
+- ./bs.sh build <file.txt>     build and publish one file
+- nohup ./bs.sh watch &        build anything already in the folder, then keep watching
+
+text format: first line = title, every other non-blank line = a paragraph.
+the page is named after the file (my-post.txt -> my-post.html) and dated today.
+after a successful push the .txt is moved to <watch folder>/built/.
+non-.txt files are logged as WARN and ignored; failures are logged as ERROR
+and the .txt is left in place to fix and re-save.
