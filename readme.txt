@@ -71,7 +71,8 @@ in practice
 2. write a post in the icloud writing/build-system folder, e.g. april-tenth.txt
    (first line = title). saving it is publishing it: within a second or two
    the page is built into amatthew-website/writing/prose/april-tenth.html,
-   committed as "add april-tenth.html", and pushed to github pages.
+   committed as "add april-tenth.html" ("update ..." if the page already
+   existed), and pushed to github pages.
 3. the .txt disappears into writing/build-system/built/ - that means it worked.
    if it's still sitting in the folder, something failed: check the log
      tail logs.txt
@@ -80,5 +81,8 @@ in practice
 5. to stop the watcher: pkill -f "bs.sh watch"; pkill fswatch
 6. to edit a published post: move its .txt out of built/ back into the folder,
    edit, save - the page is rebuilt and re-pushed (same name overwrites).
-limitations: the new page is not linked from writing.html (add it by hand),
-and a failed push is not retried - push the website repo manually.
+limitations: the new page is not linked from writing.html (add it by hand).
+a failed push is not retried automatically, but saving the .txt again retries
+it (if the page is unchanged the commit is skipped and only the push runs).
+git commits only the built page, so other staged changes in the site repo
+are left alone.

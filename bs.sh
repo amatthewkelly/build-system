@@ -57,11 +57,23 @@ build() {
         return 1
     fi
 
+    # a page that's already in the repo is being edited, not added
+    local verb=add
+    if git -C "$SITE_DIR" ls-files --error-unmatch "$html_path" >/dev/null 2>&1; then
+        verb=update
+    fi
+
     if ! git -C "$SITE_DIR" add "$html_path" >>"$LOG_FILE" 2>&1; then
         log "ERROR git add failed: $file"
         return 1
     fi
-    if ! git -C "$SITE_DIR" commit -m "add $name.html" >>"$LOG_FILE" 2>&1; then
+
+    # unchanged page (e.g. re-saving after a failed push): skip the commit but
+    # still push, so an earlier unpushed commit goes out. committing with a
+    # pathspec keeps anything else staged in the site repo out of the commit.
+    if git -C "$SITE_DIR" diff --cached --quiet -- "$html_path"; then
+        log "page unchanged, nothing to commit: $name.html"
+    elif ! git -C "$SITE_DIR" commit -m "$verb $name.html" -- "$html_path" >>"$LOG_FILE" 2>&1; then
         log "ERROR git commit failed: $file"
         return 1
     fi
