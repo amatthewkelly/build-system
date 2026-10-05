@@ -4,12 +4,8 @@
 # usage:
 #   ./bs.sh build <file>   process one dropped file
 #   ./bs.sh watch          watch the folder and build files as they arrive
-#
-# run watch in the background yourself, e.g.:
-#   nohup ./bs.sh watch &
-#
-# TODO: switch from nohup to launchd for boot persistence
-# as of now bs.sh will need to be run after each boot for folder watching
+#   ./bs.sh install        run watch in the background via launchd, at every login
+#   ./bs.sh uninstall      stop and remove the launchd agent
 
 set -u
 
@@ -104,6 +100,53 @@ watch() {
         done
 }
 
+# install() - run watch as a launchd agent: starts at login, restarts if it dies
+install() {
+    mkdir -p "$(dirname "$PLIST")"
+    cat >"$PLIST" <<EOF
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Label</key>
+	<string>$LABEL</string>
+	<key>ProgramArguments</key>
+	<array>
+		<string>/bin/bash</string>
+		<string>$BS_DIR/bs.sh</string>
+		<string>watch</string>
+	</array>
+	<key>EnvironmentVariables</key>
+	<dict>
+		<key>PATH</key>
+		<string>/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin</string>
+	</dict>
+	<key>RunAtLoad</key>
+	<true/>
+	<key>KeepAlive</key>
+	<true/>
+	<key>StandardOutPath</key>
+	<string>/dev/null</string>
+	<key>StandardErrorPath</key>
+	<string>$LOG_FILE</string>
+</dict>
+</plist>
+EOF
+    # reload if already installed, so re-running install picks up changes
+    launchctl bootout "gui/$(id -u)/$LABEL" 2>/dev/null
+    launchctl bootstrap "gui/$(id -u)" "$PLIST" && echo "installed: watching $WATCH_DIR"
+}
+
+# uninstall() - stop the launchd agent and remove it
+uninstall() {
+    launchctl bootout "gui/$(id -u)/$LABEL" 2>/dev/null
+    rm -f "$PLIST"
+    echo "uninstalled"
+}
+
+LABEL=com.aaronkelly.build-system
+PLIST="$HOME/Library/LaunchAgents/$LABEL.plist"
+
 case "${1:-}" in
     build)
         [ $# -eq 2 ] || { echo "usage: $0 build <file>" >&2; exit 1; }
@@ -112,8 +155,14 @@ case "${1:-}" in
     watch)
         watch
         ;;
+    install)
+        install
+        ;;
+    uninstall)
+        uninstall
+        ;;
     *)
-        echo "usage: $0 build <file> | watch" >&2
+        echo "usage: $0 build <file> | watch | install | uninstall" >&2
         exit 1
         ;;
 esac

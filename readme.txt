@@ -57,7 +57,9 @@ files
 
 usage
 - ./bs.sh build <file.txt>     build and publish one file
-- nohup ./bs.sh watch &        build anything already in the folder, then keep watching
+- ./bs.sh watch                build anything already in the folder, then keep watching
+- ./bs.sh install              run watch in the background, started at every login (launchd)
+- ./bs.sh uninstall            stop it and remove it from launchd
 
 text format: first line = title, every other non-blank line = a paragraph.
 the page is named after the file (my-post.txt -> my-post.html) and dated today.
@@ -66,8 +68,10 @@ non-.txt files are logged as WARN and ignored; failures are logged as ERROR
 and the .txt is left in place to fix and re-save.
 
 in practice
-1. start the watcher once per boot, from this folder:
-     nohup ./bs.sh watch > /dev/null 2>&1 &
+1. install the watcher once, from this folder:
+     ./bs.sh install
+   launchd starts it at every login and restarts it if it dies. re-run
+   install after moving this folder or editing the agent settings in bs.sh.
 2. write a post in the icloud writing/build-system folder, e.g. april-tenth.txt
    (first line = title). saving it is publishing it: within a second or two
    the page is built into amatthew-website/writing/prose/april-tenth.html,
@@ -78,7 +82,8 @@ in practice
      tail logs.txt
    fix the problem (e.g. blank first line) and save the file again to retry.
 4. to publish without the watcher running: ./bs.sh build path/to/file.txt
-5. to stop the watcher: pkill -f "bs.sh watch"; pkill fswatch
+5. to stop the watcher for good: ./bs.sh uninstall
+   (is it running? launchctl print gui/$(id -u)/com.aaronkelly.build-system)
 6. to edit a published post: move its .txt out of built/ back into the folder,
    edit, save - the page is rebuilt and re-pushed (same name overwrites).
 limitations: the new page is not linked from writing.html (add it by hand).
